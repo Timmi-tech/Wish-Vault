@@ -6,20 +6,21 @@ export interface WishlistItem {
   category: Category;
   image: string;
   priority?: boolean;
+  allowMultipleClaims?: boolean;
 }
 
 export const categories: Category[] = ['Fashion', 'Beauty', 'Shoes', 'Accessories', 'Tech', 'Home', 'Experiences', 'Gifts'];
 
 export const wishlistItems: WishlistItem[] = [
-  { id: 1, name: 'Bone Straight Wig', category: 'Beauty', image: '/images/wishlist-bone-straight-wig.jpg' },
+  { id: 1, name: 'Bone Straight Wig', category: 'Beauty', image: '/images/image.png' },
   { id: 2, name: 'Lace Front Wig', category: 'Beauty', image: '/images/wishlist-lace-front-wig.jpg' },
   { id: 3, name: 'Elegant Evening Gown', category: 'Fashion', image: '/images/wishlist-evening-gown.jpg' },
   { id: 4, name: 'Two-Piece Set', category: 'Fashion', image: '/images/wishlist-two-piece.jpg' },
   { id: 5, name: 'Stiletto Heels', category: 'Shoes', image: '/images/wishlist-stilettos.jpg' },
-  { id: 6, name: 'Block Heel Sandals', category: 'Shoes', image: '/images/wishlist-block-heels.jpg' },
+  { id: 6, name: 'Block Heel Sandals', category: 'Shoes', image: '/images/image1.png' },
   { id: 7, name: 'Designer Tote Bag', category: 'Accessories', image: '/images/wishlist-tote-bag.jpg', priority: true },
   { id: 8, name: 'Mini Crossbody Bag', category: 'Accessories', image: '/images/wishlist-crossbody.jpg' },
-  { id: 9, name: 'Cash Gift', category: 'Gifts', image: '/images/wishlist-cash.jpg' },
+  { id: 9, name: 'Cash Gift', category: 'Gifts', image: '/images/wishlist-cash.jpg', allowMultipleClaims: true },
   { id: 10, name: 'MacBook Pro', category: 'Tech', image: '/images/wishlist-macbook.jpg' },
   { id: 11, name: 'Professional Photoshoot', category: 'Experiences', image: '/images/wishlist-photoshoot.jpg' },
   { id: 12, name: 'Surprise Gift Delivery', category: 'Experiences', image: '/images/wishlist-surprise.jpg' },

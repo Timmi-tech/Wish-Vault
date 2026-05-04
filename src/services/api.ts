@@ -102,12 +102,14 @@ function buildEmailTemplate({
 }
 
 interface ClaimData {
+  itemId: number;
   itemName: string;
   category: string;
   name: string;
   email?: string;
   phone?: string;
   message?: string;
+  allowMultipleClaims?: boolean;
 }
 
 interface WishesData {
@@ -137,6 +139,32 @@ async function sendBrevoEmail(subject: string, textContent: string, htmlContent:
   return response.json();
 }
 
+async function saveClaim(data: ClaimData) {
+  const response = await fetch('/api/claims', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: string } | null;
+    return {
+      success: false,
+      error: payload?.error || 'Failed to save claim',
+      status: response.status,
+    };
+  }
+
+  const payload = await response.json() as { isClaimed?: boolean };
+
+  return {
+    success: true,
+    isClaimed: Boolean(payload.isClaimed),
+  };
+}
+
 export async function submitClaim(data: ClaimData) {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 800));
@@ -153,6 +181,15 @@ export async function submitClaim(data: ClaimData) {
   }
 
   try {
+    const claimResult = await saveClaim(data);
+
+    if (!claimResult.success) {
+      return {
+        success: false,
+        error: claimResult.error,
+      };
+    }
+
     // Build email content
     const timestamp = new Date().toLocaleString();
     const emailBody = `
@@ -192,17 +229,13 @@ Your Birthday Wishlist App
       footer: `This is an automated message from your birthday wishlist. Please reach out to ${data.name} directly to coordinate gift details.`,
     });
 
-    await sendBrevoEmail('Someone just claimed a gift!', emailBody, htmlBody);
+    try {
+      await sendBrevoEmail('Someone just claimed a gift!', emailBody, htmlBody);
+    } catch (error) {
+      console.warn('Claim was saved, but email notification failed.', error);
+    }
 
-    // Store claim in localStorage for persistence
-    const claims = JSON.parse(localStorage.getItem('giftClaims') || '[]');
-    claims.push({
-      ...data,
-      timestamp: new Date().toISOString(),
-    });
-    localStorage.setItem('giftClaims', JSON.stringify(claims));
-
-    return { success: true, message: 'Gift claimed successfully' };
+    return { success: true, message: 'Gift claimed successfully', isClaimed: claimResult.isClaimed };
   } catch {
     return { success: false, error: 'Failed to process claim' };
   }
@@ -265,12 +298,16 @@ Your Birthday Wishlist App
   }
 }
 
-// Load claimed items from localStorage
-export function getClaimedItems(): number[] {
+export async function getClaimedItems(): Promise<number[]> {
   try {
-    const claims: Array<{ itemName?: string }> = JSON.parse(localStorage.getItem('giftClaims') || '[]');
-    // Map item names back to IDs - simplified version
-    return claims.map(() => 0).filter(Boolean);
+    const response = await fetch('/api/claimed-items');
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json() as { claimedItemIds?: number[] };
+    return data.claimedItemIds || [];
   } catch {
     return [];
   }

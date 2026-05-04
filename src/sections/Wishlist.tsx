@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import { wishlistItems, categories, categoryColors, type Category, type WishlistItem } from '@/data/wishlist';
 import ClaimModal from '@/components/ClaimModal';
 import Toast from '@/components/Toast';
+import { getClaimedItems } from '@/services/api';
 
 export default function Wishlist() {
   const [activeCategory, setActiveCategory] = useState<Category | 'All'>('All');
@@ -13,6 +14,20 @@ export default function Wishlist() {
   const [toastVisible, setToastVisible] = useState(false);
   const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
   const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getClaimedItems().then((itemIds) => {
+      if (isMounted) {
+        setClaimedItems(new Set(itemIds));
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Filter items
   useEffect(() => {
@@ -49,8 +64,11 @@ export default function Wishlist() {
     setIsModalOpen(true);
   }, []);
 
-  const handleClaimed = useCallback((itemId: number) => {
-    setClaimedItems(prev => new Set(prev).add(itemId));
+  const handleClaimed = useCallback((itemId: number, isClaimed: boolean) => {
+    if (isClaimed) {
+      setClaimedItems(prev => new Set(prev).add(itemId));
+    }
+
     setToastVisible(true);
   }, []);
 
@@ -108,7 +126,8 @@ export default function Wishlist() {
           {/* Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
             {filteredItems.map((item, index) => {
-              const isClaimed = claimedItems.has(item.id);
+              const canClaimMultiple = Boolean(item.allowMultipleClaims);
+              const isClaimed = !canClaimMultiple && claimedItems.has(item.id);
               const isVisible = visibleCards.has(item.id);
               const colors = categoryColors[item.category];
 
@@ -158,7 +177,7 @@ export default function Wishlist() {
 
                     {/* Claim Button */}
                     <button
-                      onClick={() => !isClaimed && handleClaim(item)}
+                      onClick={() => handleClaim(item)}
                       disabled={isClaimed}
                       className={`w-full h-10 mt-3 rounded-full font-button text-[12px] transition-all duration-200 ${
                         isClaimed

@@ -7,7 +7,7 @@ interface ClaimModalProps {
   item: WishlistItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onClaimed: (itemId: number) => void;
+  onClaimed: (itemId: number, isClaimed: boolean) => void;
 }
 
 interface FormData {
@@ -69,17 +69,19 @@ export default function ClaimModal({ item, isOpen, onClose, onClaimed }: ClaimMo
 
     try {
       const data = await submitClaim({
+        itemId: item.id,
         itemName: item.name,
         category: item.category,
         name: formData.name,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
         message: formData.message || undefined,
+        allowMultipleClaims: item.allowMultipleClaims,
       });
 
       if (data.success) {
         setIsSuccess(true);
-        onClaimed(item.id);
+        onClaimed(item.id, Boolean(data.isClaimed));
         setTimeout(() => {
           onClose();
         }, 3000);
